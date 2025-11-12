@@ -1,0 +1,9 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+name: webapp
+image: "nadrama/hello-world:latest"
+hostname: ""
+path: /
+metrics:
+  http: true # enables Caddy http metrics - see https://caddyserver.com/docs/metrics for more

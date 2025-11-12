@@ -1,0 +1,13 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+apiVersion: v2
+name: csi-aws-ebs
+description: AWS EBS CSI driver chart
+type: application
+version: "1.0.0"
+appVersion: "1.47.0" # https://github.com/kubernetes-sigs/aws-ebs-csi-driver/releases
+dependencies:
+  - name: aws-ebs-csi-driver
+    version: "v2.47.0" # https://github.com/kubernetes-sigs/aws-ebs-csi-driver/releases
+    repository: "https://kubernetes-sigs.github.io/aws-ebs-csi-driver"

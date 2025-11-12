@@ -1,0 +1,14 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: system-traefik-selfsigned-certificate
+spec:
+  secretName: system-traefik-selfsigned-certificate-secret
+  issuerRef:
+    kind: ClusterIssuer
+    name: {{ .Values.prebake.traefik.certificates.selfsigned.issuerRef.name }}
+  dnsNames:
+{{- .Values.prebake.traefik.certificates.dnsNames | toYaml | nindent 4 }}

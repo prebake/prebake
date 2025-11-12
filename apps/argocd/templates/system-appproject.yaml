@@ -1,0 +1,27 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: system
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/finalizer
+spec:
+  description: System Apps
+  sourceNamespaces:
+    - "system-platform"
+  sourceRepos:
+    - "https://github.com/prebake/prebake.git"
+  destinations:
+    - namespace: "*"
+      server: https://kubernetes.default.svc
+  # this service account will permit deployment of privileged containers
+  # (see cluster chart privileged-admission-policy template)
+  destinationServiceAccounts:
+    - namespace: "system-argocd"
+      defaultServiceAccount: system-argocd-system-project-sa
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"

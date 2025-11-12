@@ -1,0 +1,20 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+# https://github.com/kubernetes-sigs/aws-ebs-csi-driver/blob/master/charts/aws-ebs-csi-driver/values.yaml
+aws-ebs-csi-driver:
+  node:
+    enableWindows: false
+  controller:
+    replicaCount: 1
+  defaultStorageClass:
+    enabled: false
+  storageClasses:
+  - name: system-aws-ebs-default
+    annotations:
+      storageclass.kubernetes.io/is-default-class: "true"
+    volumeBindingMode: WaitForFirstConsumer
+    reclaimPolicy: Retain
+    allowVolumeExpansion: true
+    parameters:
+      encrypted: "true"

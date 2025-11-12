@@ -1,0 +1,17 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+apiVersion: admission.k8s.io/v1
+kind: AdmissionReview
+request:
+  operation: "CREATE"
+  namespace: "system-namespace"
+  object:
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: hello-world-pod
+      namespace: system-namespace
+    spec:
+      containers:
+      - name: app
+        image: hello-world

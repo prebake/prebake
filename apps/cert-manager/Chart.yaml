@@ -1,0 +1,19 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+apiVersion: v2
+name: cert-manager
+description: Prebake cert-manager chart
+type: application
+version: "1.0.0"
+appVersion: "1.16.2"
+dependencies:
+  - name: cert-manager
+    version: "v1.16.2"
+    # https://cert-manager.io/docs/installation/helm/
+    #
+    repository: "https://charts.jetstack.io"
+  - name: cert-manager-approver-policy
+    version: "v0.21.0"
+    # https://cert-manager.io/docs/policy/approval/approver-policy/installation/
+    repository: "https://charts.jetstack.io"

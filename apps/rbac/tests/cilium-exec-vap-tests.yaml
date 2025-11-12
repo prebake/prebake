@@ -1,0 +1,24 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+policy:
+  file: ../templates/cilium-exec-vap.yaml
+  name: system-deny-cilium-exec-vap
+tests:
+  - request: pod-exec-cilium
+    user: system
+    expect: Fail
+  - request: pod-exec-cilium
+    user: admin
+    expect: Fail
+  - request: pod-exec-cilium
+    user: editor
+    expect: Fail
+  - request: pod-exec-user
+    user: system
+    expect: Pass
+  - request: pod-exec-user
+    user: admin
+    expect: Pass
+  - request: pod-exec-user
+    user: editor
+    expect: Pass

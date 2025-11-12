@@ -1,0 +1,100 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+policy:
+  file: ../templates/system-vap.yaml
+  name: system-deny-system-vap
+tests:
+  - request: namespace-create-system-prefix
+    user: system
+    expect: Pass
+  # should not be able to create namespaces with "system-" name prefix
+  - request: namespace-create-system-prefix
+    user: admin
+    expect: Fail
+  - request: namespace-create-system-prefix
+    user: editor
+    expect: Fail
+  # should be able to create namespaces without the "system-" name prefix
+  - request: namespace-create-user-prefix
+    user: system
+    expect: Pass
+  - request: namespace-create-user-prefix
+    user: admin
+    expect: Pass
+  - request: namespace-create-user-prefix
+    user: editor
+    expect: Pass
+  - request: pod-create-system-namespace
+    user: system
+    expect: Pass
+  # should not be able to create pods with the "system-" name prefix
+  - request: pod-create-system-namespace
+    user: admin
+    expect: Fail
+  - request: pod-create-system-namespace
+    user: editor
+    expect: Fail
+  - request: pod-create-user-namespace
+    user: system
+    expect: Pass
+  # should be able to create pods without the "system-" name prefix
+  - request: pod-create-user-namespace
+    user: admin
+    expect: Pass
+  - request: pod-create-user-namespace
+    user: editor
+    expect: Pass
+  # should not be able to create configmap in namespace with "system-" prefix
+  - request: configmap-create-system-namespace
+    user: admin
+    expect: Fail
+  - request: configmap-create-system-namespace
+    user: editor
+    expect: Fail
+  # should be able to create configmap in namespace without "system-" prefix
+  - request: configmap-create-user-namespace
+    user: admin
+    expect: Pass
+  - request: configmap-create-user-namespace
+    user: editor
+    expect: Pass
+  - request: vap-create-system-prefix
+    user: system
+    expect: Pass
+  # should not be able to create vap with "system-" prefix
+  - request: vap-create-system-prefix
+    user: admin
+    expect: Fail
+  - request: vap-create-system-prefix
+    user: editor
+    expect: Fail
+  - request: vap-delete-system-prefix
+    user: system
+    expect: Pass
+  # should not be able to delete vap with "system-" prefix
+  - request: vap-delete-system-prefix
+    user: admin
+    expect: Fail
+  - request: vap-delete-system-prefix
+    user: editor
+    expect: Fail
+  - request: vap-create-user-prefix
+    user: system
+    expect: Pass
+  # should be able to create vap with "user-" prefix
+  - request: vap-create-user-prefix
+    user: admin
+    expect: Pass
+  - request: vap-create-user-prefix
+    user: editor
+    expect: Pass
+  - request: vap-delete-user-prefix
+    user: system
+    expect: Pass
+  # should be able to delete vap with "user-" prefix
+  - request: vap-delete-user-prefix
+    user: admin
+    expect: Pass
+  - request: vap-delete-user-prefix
+    user: editor
+    expect: Pass

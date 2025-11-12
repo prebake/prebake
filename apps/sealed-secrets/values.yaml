@@ -1,0 +1,6 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+# https://github.com/bitnami-labs/sealed-secrets/blob/main/helm/sealed-secrets/values.yaml
+sealed-secrets:
+  keyrenewperiod: 2160h # 90 days

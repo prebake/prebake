@@ -1,0 +1,9 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+apiVersion: v2
+name: trust-manager-crds
+description: Prebake trust-manager CRDs chart
+type: application
+version: "1.0.0"
+appVersion: "0.18.0"

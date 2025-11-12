@@ -1,0 +1,22 @@
+name: RBAC Tests
+
+on:
+  push:
+  pull_request:
+  workflow_call:
+
+jobs:
+  rbac-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+        
+    - name: Run RBAC Tests
+      run: |
+        cd apps/rbac
+        ./run-tests.sh

@@ -1,0 +1,39 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+# prebake:
+#   ingress:
+#     hostname: (string)
+
+# https://artifacthub.io/packages/helm/cert-manager/cert-manager
+# https://github.com/cert-manager/cert-manager/blob/master/deploy/charts/cert-manager/values.yaml
+
+cert-manager:
+  crds:
+    enabled: false
+  global:
+    leaderElection:
+      namespace: "system-cert-manager"
+  cainjector:
+    enabled: true # required for kube-apiserver to trust webhooks certs
+  startupapicheck:
+    enabled: false
+  # use approver-policy instead of built-in auto-approver
+  disableAutoApproval: true
+
+# https://github.com/cert-manager/approver-policy/blob/main/deploy/charts/approver-policy/values.yaml
+cert-manager-approver-policy:
+  nameOverride: "system-cert-manager-approver-policy"
+  crds:
+    enabled: false
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  app:
+    approveSignerNames:
+      - "issuers.cert-manager.io/*"
+      - "clusterissuers.cert-manager.io/*"

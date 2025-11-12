@@ -1,0 +1,20 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+{{- if .Values.prebake.traefik.certificates.casigned }}
+{{- if .Values.prebake.traefik.certificates.casigned.issuerRef }}
+{{- if .Values.prebake.traefik.certificates.casigned.issuerRef.name }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: system-traefik-casigned-certificate
+spec:
+  secretName: system-traefik-casigned-certificate-secret
+  issuerRef:
+    kind: ClusterIssuer
+    name: {{ .Values.prebake.traefik.certificates.casigned.issuerRef.name }}
+  dnsNames:
+{{- .Values.prebake.traefik.certificates.dnsNames | toYaml | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}

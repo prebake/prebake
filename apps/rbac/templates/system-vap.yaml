@@ -1,0 +1,49 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: system-deny-system-vap
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - operations: ["CREATE", "UPDATE", "DELETE", "CONNECT"]
+        apiGroups: ["*"]
+        apiVersions: ["*"]
+        resources: ["*/*"]
+  validations:
+    - expression: >
+        !(
+          has(request.userInfo.groups) &&
+          request.userInfo.groups.exists(g, g.startsWith("prebake:")) &&
+          (
+            (
+              (!has(object.metadata.namespace) || object.metadata.namespace == "") && (
+                object.metadata.name.startsWith("kube-") ||
+                object.metadata.name.startsWith("system-") ||
+                (has(object.kind) && object.kind in ["ClusterRole", "ClusterRoleBinding", "ComponentStatus", "CSIDriver", "APIService", "CustomResourceDefinition"]) ||
+                (has(oldObject.kind) && oldObject.kind in ["ClusterRole", "ClusterRoleBinding", "ComponentStatus", "CSIDriver", "APIService", "CustomResourceDefinition"])
+              )
+            ) ||
+            (
+              has(object.metadata.namespace) && object.metadata.namespace != "" && (
+                object.metadata.namespace.startsWith("kube-") || object.metadata.namespace.startsWith("system-")
+              ) && !(
+                request.userInfo.groups.exists(g, g == "prebake:admins") && request.operation == "DELETE" && oldObject != null && oldObject.kind == "Pod"
+              )
+            )
+          )
+        )
+      message: "Access to system-/kube- prefixed resources and namespaces and critical cluster resources is restricted."
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: system-deny-system-vapb
+spec:
+  policyName: system-deny-system-vap
+  validationActions: ["Deny", "Audit"]
+  matchResources:
+    namespaceSelector: {}

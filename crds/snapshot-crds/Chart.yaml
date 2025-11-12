@@ -1,0 +1,9 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+apiVersion: v2
+name: snapshot-crds
+description: CSI Snapshot CRDs chart
+type: application
+version: "1.0.0"
+appVersion: "v8.3.0"

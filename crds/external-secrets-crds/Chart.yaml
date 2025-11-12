@@ -1,0 +1,9 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+apiVersion: v2
+name: external-secrets-crds
+description: Prebake External Secrets Operator CRDs chart
+type: application
+version: "1.0.0"
+appVersion: "0.19.2"

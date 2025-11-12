@@ -1,0 +1,29 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: system-deny-cilium-exec-vap
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - operations: ["CONNECT"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods/exec"]
+  validations:
+    - expression: >
+        !(request.namespace == "system-cilium")
+      message: "Exec into Cilium pods is not permitted for security reasons"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: system-deny-cilium-exec-vapb
+spec:
+  policyName: system-deny-cilium-exec-vap
+  validationActions: ["Deny", "Audit"]
+  matchResources:
+    namespaceSelector: {}

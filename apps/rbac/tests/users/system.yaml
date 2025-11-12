@@ -1,0 +1,9 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+apiVersion: authentication.k8s.io/v1
+kind: UserInfo
+spec:
+  username: system:master
+  groups:
+  - system:masters
+  - system:authenticated

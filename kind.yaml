@@ -1,0 +1,21 @@
+# https://kind.sigs.k8s.io/docs/user/configuration/
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: prebake
+networking:
+  ipFamily: dual
+  podSubnet: "100.64.0.0/10,fd64::/48"
+  serviceSubnet: "198.18.0.0/15,fdc6::/108"
+  disableDefaultCNI: true
+nodes:
+- role: control-plane
+  kubeadmConfigPatches:
+  - |
+    kind: ClusterConfiguration
+    networking:
+      dnsDomain: "cluster.local"
+    apiServer:
+      extraArgs:
+        runtime-config: "networking.k8s.io/v1alpha1=false"

@@ -1,0 +1,38 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+{{ range $name, $app := index .Values.platform.system.apps }}
+{{ if $app.enabled }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: "{{ $name }}-app"
+spec:
+  project: system
+  source:
+    repoURL: "https://github.com/prebake/prebake.git"
+    targetRevision: "v1"
+    path: "apps/{{ $name }}"
+    helm:
+      releaseName: "system-{{ $name }}"
+      skipCrds: {{ if $name | hasSuffix "-crds" }}false{{ else }}true{{ end }}
+      valuesObject:
+{{ index $.Values.valuesObjects $name | default "{}" | indent 8 }}
+  syncPolicy:
+    automated:
+      prune: true
+      allowEmpty: true
+      selfHeal: true
+{{ if eq $name "csi-aws-ebs" }}
+  ignoreDifferences:
+    - group: storage.k8s.io
+      kind: CSIDriver
+      name: ebs.csi.aws.com
+      jqPathExpressions:
+        - .spec.nodeAllocatableUpdatePeriodSeconds
+{{ end }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: "{{ $app.namespace }}"
+{{ end }}
+{{ end }}

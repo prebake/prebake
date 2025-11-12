@@ -1,0 +1,72 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+# prebake:
+#   ingress:
+#     hostname: (string)
+#     letsencrypt: (boolean)
+
+# https://github.com/traefik/traefik-helm-chart/blob/master/traefik/VALUES.md#values
+# https://github.com/traefik/traefik-helm-chart/blob/master/traefik/values.yaml
+traefik:
+  crds:
+    enabled: false
+  # image:
+  # skopeo copy -a docker://docker.io/library/traefik:v3.2.0 docker://quay.io/nadrama/traefik:v3.2.0
+  #   registry: quay.io
+  #   repository: nadrama/traefik
+  global:
+    checkNewVersion: false
+    sendAnonymousUsage: false
+  logs:
+    # general:
+    #   level: "DEBUG"
+    access:
+      enabled: false
+  deployment:
+    kind: DaemonSet
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
+  service:
+    type: NodePort
+  providers:
+    kubernetesIngress:
+      enabled: false
+    kubernetesGateway:
+      enabled: true
+      experimentalChannel: true
+  experimental:
+    kubernetesGateway:
+      enabled: true
+  gateway:
+    enabled: false
+  gatewayClass:
+    enabled: true
+    name: "system-traefik"
+  ingressClass:
+    enabled: false
+  rbac:
+    enabled: true
+  ports:
+    # disable HTTP
+    web:
+      asDefault: false
+      port: 80
+      hostPort: 80
+    # enable HTTPS
+    websecure:
+      asDefault: true
+      port: 443
+      hostPort: 443
+    # enable Traefik dashboard and API port
+    traefik:
+      asDefault: false
+      port: 8080
+      hostPort: 8080
+  # enable routing to Traefik dashboard and API over its 8080 entrypoint/port
+  ingressRoute:
+    dashboard:
+      enabled: true

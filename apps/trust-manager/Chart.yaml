@@ -1,0 +1,13 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+apiVersion: v2
+name: trust-manager
+description: Prebake trust-manager chart
+type: application
+version: "1.0.0"
+appVersion: "0.18.0"
+dependencies:
+  - name: trust-manager
+    version: "v0.18.0"
+    # https://cert-manager.io/docs/trust/trust-manager/installation/
+    repository: "https://charts.jetstack.io"

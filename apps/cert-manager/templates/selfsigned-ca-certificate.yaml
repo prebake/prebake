@@ -1,0 +1,15 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+# CA certificate for self-signed certificates
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: system-selfsigned-ca-certificate
+spec:
+  secretName: system-selfsigned-ca-certificate-secret
+  commonName: '{{ index .Values.prebake "cert-manager" "clusterCA" "commonName" }}'
+  isCA: true
+  issuerRef:
+    kind: Issuer
+    name: system-selfsigned-ca-issuer

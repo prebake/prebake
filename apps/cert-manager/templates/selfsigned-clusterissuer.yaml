@@ -1,0 +1,11 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+# ClusterIssuer for self-signed certificates
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: system-selfsigned-clusterissuer
+spec:
+  ca:
+    secretName: system-selfsigned-ca-certificate-secret

@@ -1,0 +1,14 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+apiVersion: v2
+name: traefik
+description: Prebake Traefik CRDs charts
+type: application
+version: "1.0.0"
+appVersion: "36.3.0"
+# dependencies:
+#   - name: traefik
+#     version: "v36.3.0"
+#     # https://github.com/traefik/traefik-helm-chart
+#     repository: "https://traefik.github.io/charts"

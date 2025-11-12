@@ -1,0 +1,11 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+apiVersion: admission.k8s.io/v1
+kind: AdmissionReview
+request:
+  operation: "CREATE"
+  object:
+    apiVersion: v1
+    kind: ValidatingAdmissionPolicy
+    metadata:
+      name: system-vap

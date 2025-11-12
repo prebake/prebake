@@ -1,0 +1,12 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+# https://github.com/piraeusdatastore/helm-charts/blob/main/charts/snapshot-controller/values.yaml
+snapshot-controller:
+  controller:
+    fullnameOverride: system-snapshot-controller
+    args:
+      leaderElection: true
+      leaderElectionNamespace: "$(NAMESPACE)"
+      httpEndpoint: ":8080"
+      featureGates: "CSIVolumeGroupSnapshot=true"

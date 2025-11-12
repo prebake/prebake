@@ -1,0 +1,27 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+# https://github.com/cert-manager/trust-manager/blob/main/deploy/charts/trust-manager/values.yaml
+trust-manager:
+  crds:
+    enabled: false
+  nameOverride: "system-trust-manager"
+  defaultPackage:
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  app:
+    trust:
+      # https://cert-manager.io/docs/trust/trust-manager/
+      # note: configmap and secret sources can only come from the 'Trust Namespace'
+      namespace: system-cert-manager
+    webhook:
+      tls:
+        approverPolicy:
+          enabled: true
+          certManagerNamespace: "system-cert-manager"
+          certManagerServiceAccount: "system-cert-manager"

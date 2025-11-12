@@ -1,0 +1,9 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+apiVersion: v2
+name: cert-manager-crds
+description: Prebake cert-manager CRDs chart
+type: application
+version: "1.0.0"
+appVersion: "1.16.2"

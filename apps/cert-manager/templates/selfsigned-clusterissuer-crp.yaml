@@ -1,0 +1,52 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+# CertificateRequestPolicy for service certificates
+# Allows any namespace to create server or client certificates for services
+# but requires specific DNS name patterns and no commonName
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: system-selfsigned-clusterissuer-crp
+spec:
+  selector:
+    issuerRef:
+      kind: ClusterIssuer
+      name: system-selfsigned-clusterissuer
+  allowed:
+    # commonName can be either empty or the `service.namespace`
+    commonName:
+      required: false
+      validations:
+        - rule: |
+            self.startsWith('') || self == (cr.name + '.' + cr.namespace)
+          message: "commonName must be empty or start with the service namespace"
+    # Only allow specific service DNS name patterns
+    dnsNames:
+      required: true
+      validations:
+        # Cnan only contain exactly the 4 valid service DNS patterns
+        - rule: |
+            self.endsWith('.' + cr.namespace + '.svc.cluster.local') ||
+            self.endsWith('.' + cr.namespace + '.svc') ||
+            self.endsWith('.' + cr.namespace) ||
+            !self.contains('.')
+          message: "DNS names can only contain exactly the 4 service DNS patterns: service-name, service-name.namespace, service-name.namespace.svc, ervice-name.namespace.svc.cluster.local"
+    # Restrict to server auth and client auth only (no CA certificates)
+    usages:
+      - "digital signature"
+      - "key encipherment"
+      - "server auth"
+      - "client auth"
+    # Prevent CA certificates
+    isCA: false
+    # Allow basic subject fields but not required
+    subject:
+      organizations: { values: ["*"] }
+      countries: { values: ["*"] }
+      organizationalUnits: { values: ["*"] }
+      localities: { values: ["*"] }
+      provinces: { values: ["*"] }
+      streetAddresses: { values: ["*"] }
+      postalCodes: { values: ["*"] }
+      serialNumber: { value: "*" }

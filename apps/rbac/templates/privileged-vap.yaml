@@ -1,0 +1,57 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: system-deny-privileged-vap
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups:   [""]
+        apiVersions: ["v1"]
+        operations:  ["CREATE", "UPDATE"]
+        resources:   ["pods"]
+      - apiGroups:   ["apps"]
+        apiVersions: ["v1"]
+        operations:  ["CREATE", "UPDATE"]
+        resources:   ["deployments","replicasets","daemonsets","statefulsets"]
+      - apiGroups:   ["batch"]
+        apiVersions: ["v1"]
+        operations:  ["CREATE", "UPDATE"]
+        resources:   ["jobs","cronjobs"]
+  validations:
+    - expression: >
+        object.metadata.namespace.startsWith('kube-') ||
+        object.metadata.namespace.startsWith('system-') ||
+        !(has(object.spec.containers)) ||
+        object.spec.containers.all(container, !(has(container.securityContext)) ||
+        (
+          (!(has(container.securityContext.privileged)) || container.securityContext.privileged != true) &&
+          (!(has(container.securityContext.capabilities)) || !(has(container.securityContext.capabilities.add)) ||
+          container.securityContext.capabilities.add.all(cap, cap != 'SYS_ADM')))
+        )
+      message: "Privileged containers are not allowed."
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: system-deny-privileged-vapb
+spec:
+  policyName: system-deny-privileged-vap
+  validationActions: ["Deny", "Audit"]
+  matchResources:
+    resourceRules:
+      - apiGroups:   [""]
+        apiVersions: ["v1"]
+        operations:  ["CREATE", "UPDATE"]
+        resources:   ["pods"]
+      - apiGroups:   ["apps"]
+        apiVersions: ["v1"]
+        operations:  ["CREATE", "UPDATE"]
+        resources:   ["deployments","replicasets","daemonsets","statefulsets"]
+      - apiGroups:   ["batch"]
+        apiVersions: ["v1"]
+        operations:  ["CREATE", "UPDATE"]
+        resources:   ["jobs","cronjobs"]

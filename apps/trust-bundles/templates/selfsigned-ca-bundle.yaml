@@ -1,0 +1,18 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+apiVersion: trust.cert-manager.io/v1alpha1
+kind: Bundle
+metadata:
+  name: system-selfsigned-ca-bundle
+spec:
+  sources:
+    - secret:
+        name: "system-selfsigned-ca-certificate-secret"
+        key: "tls.crt"
+  target:
+    configMap:
+      key: "ca.crt"
+    namespaceSelector:
+      matchLabels:
+        cluster.prebake.dev/bundles-selfsigned-ca: from-trust-bundles

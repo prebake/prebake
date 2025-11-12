@@ -1,0 +1,75 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+platform:
+  system:
+    # CRDs
+    crds:
+      cilium-crds:
+        enabled: true
+        namespace: system-cluster
+      snapshot-crds:
+        enabled: true
+        namespace: system-cluster
+      cert-manager-crds:
+        enabled: true
+        namespace: system-cluster
+      trust-manager-crds:
+        enabled: true
+        namespace: system-cluster
+      gateway-api-crds:
+        enabled: true
+        namespace: system-cluster
+      traefik-crds:
+        enabled: true
+        namespace: system-cluster
+      argocd-crds:
+        enabled: true
+        namespace: system-cluster
+      sealed-secrets-crds:
+        enabled: true
+        namespace: system-cluster
+      external-secrets-crds:
+        enabled: true
+        namespace: system-cluster
+    # Apps
+    apps:
+      namespaces:
+        enabled: true
+        namespace: system-cluster
+      rbac:
+        enabled: true
+        namespace: system-cluster
+      cilium:
+        enabled: true
+        namespace: system-cilium
+      coredns:
+        enabled: true
+        namespace: system-coredns
+      snapshot:
+        enabled: true
+        namespace: system-snapshot
+      csi-aws-ebs:
+        enabled: false
+        namespace: system-csi-aws-ebs
+      cert-manager:
+        enabled: true
+        namespace: system-cert-manager
+      trust-manager:
+        enabled: true
+        namespace: system-trust-manager
+      traefik:
+        enabled: true
+        namespace: system-traefik
+      trust-bundles:
+        enabled: true
+        namespace: system-trust-bundles
+      sealed-secrets:
+        enabled: true
+        namespace: system-sealed-secrets
+      argocd:
+        enabled: true
+        namespace: system-argocd
+      nadrama-paas:
+        enabled: false
+        namespace: system-nadrama-paas

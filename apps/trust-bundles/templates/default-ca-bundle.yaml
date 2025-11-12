@@ -1,0 +1,16 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+apiVersion: trust.cert-manager.io/v1alpha1
+kind: Bundle
+metadata:
+  name: system-default-ca-bundle
+spec:
+  sources:
+    - useDefaultCAs: true
+  target:
+    configMap:
+      key: "ca.crt"
+    namespaceSelector:
+      matchLabels:
+        cluster.prebake.dev/bundles-default-ca: from-trust-bundles

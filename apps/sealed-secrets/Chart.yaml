@@ -1,0 +1,13 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+apiVersion: v2
+name: cilium
+description: Prebake sealed-secrets chart
+type: application
+version: "1.0.0"
+appVersion: "0.30.0" # https://github.com/bitnami-labs/sealed-secrets/blob/main/helm/sealed-secrets/Chart.yaml#L4
+dependencies:
+  - name: sealed-secrets
+    version: "v2.17.3"
+    repository: "https://bitnami-labs.github.io/sealed-secrets"

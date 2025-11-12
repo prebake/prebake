@@ -1,0 +1,314 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+
+{{- $valuesDir := env "VALUES_DIR" | default "_values" }}
+
+repositories:
+  - name: argo
+    url: https://argoproj.github.io/argo-helm
+  - name: aws-ebs-csi-driver
+    url: https://kubernetes-sigs.github.io/aws-ebs-csi-driver
+  - name: cilium
+    url: https://helm.cilium.io
+  - name: coredns
+    url: https://coredns.github.io/helm
+  - name: external-secrets
+    url: https://charts.external-secrets.io
+  - name: jetstack
+    url: https://charts.jetstack.io
+  - name: piraeus
+    url: https://piraeus.io/helm-charts/
+  - name: sealed-secrets
+    url: https://bitnami-labs.github.io/sealed-secrets
+  - name: traefik
+    url: https://traefik.github.io/charts
+
+helmDefaults:
+  createNamespace: false
+
+values:
+  - {{ $valuesDir }}/platform.yaml
+
+---
+
+{{- $valuesDir := env "VALUES_DIR" | default "_values" }}
+
+{{- $crdCharts := list
+  "cilium-crds"
+  "snapshot-crds"
+  "cert-manager-crds"
+  "trust-manager-crds"
+  "gateway-api-crds"
+  "traefik-crds"
+  "argocd-crds"
+  "sealed-secrets-crds"
+  "external-secrets-crds" }}
+
+{{- define "cert-manager.patches" }}
+{{- if ne (env "HELMFILE_OFFLINE") "true" }}
+- events: ["presync"]
+  showlogs: true
+  command: "bash"
+  args:
+    - "-c"
+    - |
+      echo "Patching cert-manager webhooks to Ignore failure policy..."
+      kubectl patch validatingwebhookconfiguration/system-cert-manager-webhook \
+        --type='json' \
+        -p='[{'op': 'replace', 'path': '/webhooks/0/failurePolicy', 'value': 'Ignore'}]' || true
+      kubectl patch mutatingwebhookconfiguration/system-cert-manager-webhook \
+        --type='json' \
+        -p='[{'op': 'replace', 'path': '/webhooks/0/failurePolicy', 'value': 'Ignore'}]' || true
+      kubectl patch validatingwebhookconfiguration/system-cert-manager-approver-policy \
+        --type='json' \
+        -p='[{'op': 'replace', 'path': '/webhooks/0/failurePolicy', 'value': 'Ignore'}]' || true
+{{- end }}
+{{- end }}
+
+{{- define "trust-manager.patches" }}
+{{- if ne (env "HELMFILE_OFFLINE") "true" }}
+- events: ["presync"]
+  showlogs: true
+  command: "bash"
+  args:
+    - "-c"
+    - |
+      echo "Patching trust-manager webhooks to Ignore failure policy..."
+      kubectl patch validatingwebhookconfiguration/system-trust-manager \
+        --type='json' \
+        -p='[{'op': 'replace', 'path': '/webhooks/0/failurePolicy', 'value': 'Ignore'}]' || true
+{{- end }}
+{{- end }}
+
+{{- if ne (env "HELMFILE_OFFLINE") "true" }}
+hooks:
+  - events: ["prepare"]
+    showlogs: true
+    command: "bash"
+    args:
+      - "-c"
+      - |
+        {{ if eq .Values.platform.cluster.type "nadrama" }}
+        # Patch kubernetes service for dual-stack networking
+        kubectl patch service kubernetes -n default --type='merge' -p='{"spec":{"ipFamilyPolicy":"PreferDualStack","ipFamilies":["IPv4","IPv6"],"clusterIPs":["198.18.0.1","fdc6::1"]}}'
+        {{ else if eq .Values.platform.cluster.type "eks" }}
+        # Disable aws-node daemonset
+        kubectl --context=platform-production-eks patch daemonset aws-node -n kube-system -p '{"spec":{"template":{"spec":{"nodeSelector":{"platform.prebake.dev/allow-eks-aws-node":"true"}}}}}'
+        # Disable kube-proxy daemonset
+        kubectl --context=platform-production-eks patch daemonset kube-proxy -n kube-system -p '{"spec":{"template":{"spec":{"nodeSelector":{"platform.prebake.dev/allow-eks-kube-proxy":"true"}}}}}'
+        {{ end }}
+        # Label and annotate default namespace for Helm management
+        kubectl label namespace default app.kubernetes.io/managed-by=Helm --overwrite
+        kubectl annotate namespace default meta.helm.sh/release-name=system-namespaces meta.helm.sh/release-namespace=system-cluster --overwrite
+        # Create system-cluster namespace if it doesn't exist
+        kubectl create namespace system-cluster --dry-run=client -o yaml | kubectl apply -f -
+{{- end }}
+
+releases:
+  # CRDs
+
+{{- range $crdCharts }}
+  - name: system-{{ . }}
+    chart: ./crds/{{ . }}
+    namespace: system-cluster
+    condition: platform.system.crds.{{ . }}.enabled
+    labels:
+      type: crd
+{{- end }}
+
+  # Apps
+
+  - name: system-namespaces
+    chart: ./apps/namespaces
+    namespace: system-cluster
+    condition: platform.system.apps.namespaces.enabled
+    needs:
+{{- range $crdCharts }}
+      - system-{{ . }}
+{{- end }}
+    labels:
+      type: app
+      tier: infrastructure
+    values:
+      - {{ $valuesDir }}/namespaces.yaml
+
+  - name: system-rbac
+    chart: ./apps/rbac
+    namespace: system-cluster
+    condition: platform.system.apps.rbac.enabled
+    needs:
+      - system-namespaces
+    labels:
+      type: app
+      tier: infrastructure
+    values:
+      - {{ $valuesDir }}/rbac.yaml
+
+  - name: system-cilium
+    chart: ./apps/cilium
+    namespace: system-cilium
+    condition: platform.system.apps.cilium.enabled
+    needs:
+      - system-cluster/system-namespaces
+      - system-cluster/system-cilium-crds
+    labels:
+      type: app
+    values:
+      - {{ $valuesDir }}/cilium.yaml
+
+  - name: system-coredns
+    chart: ./apps/coredns
+    namespace: system-coredns
+    condition: platform.system.apps.coredns.enabled
+    needs:
+      - system-cluster/system-namespaces
+      - system-cilium/system-cilium
+    labels:
+      type: app
+    values:
+      - {{ $valuesDir }}/coredns.yaml
+
+  - name: system-snapshot
+    chart: ./apps/snapshot
+    namespace: system-snapshot
+    condition: platform.system.apps.snapshot.enabled
+    needs:
+      - system-cluster/system-namespaces
+      - system-cluster/system-snapshot-crds
+    labels:
+      type: app
+    values:
+      - {{ $valuesDir }}/snapshot.yaml
+
+  - name: system-csi-aws-ebs
+    chart: ./apps/csi-aws-ebs
+    namespace: system-csi-aws-ebs
+    condition: platform.system.apps.csi-aws-ebs.enabled
+    needs:
+      - system-cluster/system-namespaces
+      - system-cluster/system-snapshot-crds
+      - system-snapshot/system-snapshot
+    labels:
+      type: app
+    values:
+      - {{ $valuesDir }}/csi-aws-ebs.yaml
+
+  - name: system-cert-manager
+    chart: ./apps/cert-manager
+    namespace: system-cert-manager
+    condition: platform.system.apps.cert-manager.enabled
+    needs:
+      - system-cluster/system-namespaces
+      - system-cluster/system-cert-manager-crds
+    labels:
+      type: app
+    values:
+      - {{ $valuesDir }}/cert-manager.yaml
+
+  - name: system-trust-manager
+    chart: ./apps/trust-manager
+    namespace: system-trust-manager
+    condition: platform.system.apps.trust-manager.enabled
+    needs:
+      - system-cluster/system-namespaces
+      - system-cluster/system-trust-manager-crds
+      - system-cert-manager/system-cert-manager
+    labels:
+      type: app
+    hooks:
+{{- include "trust-manager.patches" . | nindent 6 }}
+    values:
+      - {{ $valuesDir }}/trust-manager.yaml
+
+  - name: system-traefik
+    chart: ./apps/traefik
+    namespace: system-traefik
+    condition: platform.system.apps.traefik.enabled
+    needs:
+      - system-cluster/system-namespaces
+      - system-cluster/system-gateway-api-crds
+      - system-cluster/system-cert-manager-crds
+      - system-cert-manager/system-cert-manager
+      - system-cluster/system-traefik-crds
+    labels:
+      type: app
+    hooks:
+{{- include "cert-manager.patches" . | nindent 6 }}
+    values:
+      - {{ $valuesDir }}/traefik.yaml
+
+  - name: system-trust-bundles
+    chart: ./apps/trust-bundles
+    namespace: system-trust-bundles
+    condition: platform.system.apps.trust-bundles.enabled
+    needs:
+      - system-cluster/system-namespaces
+      - system-cluster/system-trust-manager-crds
+      - system-trust-manager/system-trust-manager
+    labels:
+      type: app
+    hooks:
+{{- include "trust-manager.patches" . | nindent 6 }}
+    values:
+      - {{ $valuesDir }}/trust-bundles.yaml
+
+  - name: system-sealed-secrets
+    chart: ./apps/sealed-secrets
+    namespace: system-sealed-secrets
+    condition: platform.system.apps.sealed-secrets.enabled
+    needs:
+      - system-cluster/system-namespaces
+      - system-cluster/system-sealed-secrets-crds
+    labels:
+      type: app
+    values:
+      - {{ $valuesDir }}/sealed-secrets.yaml
+
+  - name: system-argocd
+    chart: ./apps/argocd
+    namespace: system-argocd
+    condition: platform.system.apps.argocd.enabled
+    needs:
+      - system-cluster/system-namespaces
+      - system-cluster/system-argocd-crds
+      - system-cluster/system-gateway-api-crds
+    labels:
+      type: app
+    hooks:
+{{- include "cert-manager.patches" . | nindent 6 }}
+      - events: ["presync"]
+        showlogs: true
+        command: "./apps/argocd/pre-install.sh"
+    values:
+      - {{ $valuesDir }}/argocd.yaml
+
+  - name: system-platform
+    chart: ./apps/platform
+    namespace: system-platform
+    needs:
+      - system-cluster/system-namespaces
+      - system-cluster/system-argocd-crds
+      - system-argocd/system-argocd
+    labels:
+      type: app
+    set:
+{{- range $name, $app := .Values.platform.system.apps }}
+{{- if $app.enabled }}
+      - name: "valuesObjects.{{ $name }}"
+        file: "{{ $valuesDir }}/{{ $name }}.yaml"
+{{- end }}
+{{- end }}
+    values:
+      - {{ $valuesDir }}/platform.yaml
+
+  - name: webapp
+    chart: ./templates/webapp
+    namespace: default
+    needs:
+      - system-cluster/system-gateway-api-crds
+      - system-cluster/system-cert-manager-crds
+      - system-cert-manager/system-cert-manager
+    labels:
+      type: template
+    hooks:
+{{- include "cert-manager.patches" . | nindent 6 }}

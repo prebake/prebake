@@ -1,0 +1,17 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+apiVersion: admission.k8s.io/v1
+kind: AdmissionReview
+request:
+  operation: "CONNECT"
+  namespace: "system-cilium"
+  object:
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: cilium-pod
+      namespace: system-cilium
+    spec:
+      containers:
+      - name: app
+        image: cilium/cilium

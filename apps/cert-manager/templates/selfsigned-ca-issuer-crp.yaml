@@ -1,0 +1,35 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+# CertificateRequestPolicy allowing cert manager to establish a CA certificate for self-signed certificates
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: system-selfsigned-ca-issuer-crp
+spec:
+  selector:
+    issuerRef:
+      kind: Issuer
+      name: system-selfsigned-ca-issuer
+    namespace:
+      matchNames:
+        - "system-cert-manager"
+  allowed:
+    commonName:
+      value: '{{ index .Values.prebake "cert-manager" "clusterCA" "commonName" }}'
+      required: true
+    isCA: true
+    usages:
+      - "digital signature"
+      - "key encipherment"
+      - "cert sign"
+      - "crl sign"
+    subject:
+      organizations: { values: ["*"] }
+      countries: { values: ["*"] }
+      organizationalUnits: { values: ["*"] }
+      localities: { values: ["*"] }
+      provinces: { values: ["*"] }
+      streetAddresses: { values: ["*"] }
+      postalCodes: { values: ["*"] }
+      serialNumber: { value: "*" }

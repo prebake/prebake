@@ -1,0 +1,74 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-caddy-configmap
+data:
+  Caddyfile: |
+    {
+      auto_https off
+      {{- if .Values.metrics }}
+      {{- if .Values.metrics.http }}
+      metrics
+      {{- end }}
+      {{- end }}
+    }
+    :443 {
+      tls /etc/caddy/certs/tls.crt /etc/caddy/certs/tls.key
+      reverse_proxy 127.0.0.1:80
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}-deployment
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+    spec:
+      containers:
+        - name: {{ .Values.name }}-container
+          image: {{ .Values.image }}
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
+        - name: {{ .Values.name }}-caddy
+          image: caddy
+          ports:
+            - containerPort: 443
+            {{- if .Values.metrics }}
+            {{- if .Values.metrics.http }}
+            - containerPort: 2019
+            {{- end }}
+            {{- end }}
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "400m"
+              memory: "256Mi"
+          volumeMounts:
+            - name: {{ .Values.name }}-caddy-tls-volume
+              mountPath: /etc/caddy/certs
+            - name: {{ .Values.name }}-caddy-config-volume
+              mountPath: /etc/caddy
+      volumes:
+        - name: {{ .Values.name }}-caddy-tls-volume
+          secret:
+            secretName: {{ .Values.name }}-certificate-secret
+        - name: {{ .Values.name }}-caddy-config-volume
+          configMap:
+            name: {{ .Values.name }}-caddy-configmap

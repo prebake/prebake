@@ -1,0 +1,49 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+# prebake:
+#   ingress:
+#     hostname: (string)
+
+# https://github.com/argoproj/argo-helm/blob/main/charts/argo-cd/values.yaml
+argo-cd:
+  crds:
+    install: false
+  dex:
+    enabled: false
+  redis:
+    enabled: true
+  redisSecretInit:
+    enabled: false # we have disabled helm hooks and do this via ./redis-password.sh instead
+  configs:
+    params:
+      application.namespaces: "system-platform"
+    cm:
+      # done via helper script: ./cm-configmap.sh
+      create: false
+    rbac:
+      policy.csv: |
+        g, system:masters, role:admin
+      policy.default: "role:readonly"
+  server:
+    certificate:
+      enabled: true
+      domain: "system-argocd-server.system-argocd"
+      additionalHosts:
+        - system-argocd-server
+        - system-argocd-server.system-argocd.svc
+        - system-argocd-server.system-argocd.svc.cluster.local
+      issuer:
+        kind: ClusterIssuer
+        name: system-selfsigned-clusterissuer
+  application-set:
+    certificate:
+      enabled: true
+      domain: "system-argocd-application-set-controller.system-argocd"
+      additionalHosts:
+        - system-argocd-application-set-controller
+        - system-argocd-application-set-controller.system-argocd.svc
+        - system-argocd-application-set-controller.system-argocd.svc.cluster.local
+      issuer:
+        kind: ClusterIssuer
+        name: system-selfsigned-clusterissuer

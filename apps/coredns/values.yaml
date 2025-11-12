@@ -1,0 +1,42 @@
+# Copyright 2025 Nadrama Pty Ltd
+# SPDX-License-Identifier: Apache-2.0
+---
+# https://github.com/coredns/helm/blob/master/charts/coredns/values.yaml
+coredns:
+  podAnnotations:
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+  tolerations:
+    - key: "node.kubernetes.io/not-ready"
+      operator: "Exists"
+      effect: "NoExecute"
+  servers:
+    - zones:
+        - zone: .
+          use_tcp: true
+      port: 53
+      plugins:
+        - name: errors
+        - name: health
+          configBlock: |-
+            lameduck 10s
+        - name: ready
+        - name: kubernetes
+          parameters: cluster.local in-addr.arpa ip6.arpa
+          configBlock: |-
+            pods insecure
+            fallthrough in-addr.arpa ip6.arpa
+            ttl 30
+        - name: autopath
+          parameters: "@kubernetes"
+        - name: prometheus
+          parameters: 0.0.0.0:9153
+        - name: forward
+          parameters: . /etc/resolv.conf
+        - name: cache
+          parameters: 30
+        - name: loop
+        - name: reload
+        - name: loadbalance
+  rollingUpdate:
+    maxUnavailable: 0
+    maxSurge:: 1
